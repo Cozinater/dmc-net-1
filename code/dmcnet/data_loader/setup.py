@@ -3,7 +3,7 @@ import numpy as np
 
 coviar_utils_module = Extension('coviar',
 		sources = ['coviar_data_loader.c'],
-		include_dirs=[np.get_include(), '/mnt/homedir/zshou/code/FFmpeg/include/'],
+		include_dirs=[np.get_include(), '/home/raymond/FFmpeg/include'],
 		extra_compile_args=['-DNDEBUG', '-O3', '-std=c99'],
 		extra_link_args=['-lavutil', '-lavcodec', '-lavformat', '-lswscale', '-L/mnt/homedir/zshou/code/FFmpeg/lib/']
 )
