@@ -181,26 +181,39 @@ def main():
 
         # perform training
         print("current epoch freeze?: {}".format(str(epoch < args.epoch_thre)))
-        train(train_loader, model, criterion, criterion_mse, optimizer_cls,
+        prec1, prec5, loss_cls, loss_gf, loss = train(train_loader, model, criterion, criterion_mse, optimizer_cls,
             optimizer_gf, epoch, cur_lr_cls, cur_lr_gf, args.lr_cls, args.lr_mse, args.att, freeze=(epoch < args.epoch_thre))
 
         # perform validation if needed
-        if epoch % args.eval_freq == 0 or epoch == args.epochs - 1:
-            prec1 = validate(val_loader, model, criterion, criterion_mse, args.lr_cls, args.lr_mse, args.att)
-            is_best = prec1 > best_prec1
-            best_prec1 = max(prec1, best_prec1)
-            if is_best or epoch % SAVE_FREQ == 0:
-                save_checkpoint(
-                    {
-                        'epoch': epoch + 1,
-                        'arch': args.arch,
-                        'state_dict': model.state_dict(),
-                        'best_prec1': best_prec1,
-                        'optimizer_cls': optimizer_cls.state_dict(),
-                        'optimizer_gf': optimizer_gf.state_dict(),
-                    },
-                    is_best,
-                    filename='checkpoint.pth.tar')
+        #if epoch % args.eval_freq == 0 or epoch == args.epochs - 1:
+        test_prec1, test_prec5, val_loss_cls, val_loss_gf, val_loss = validate(val_loader, model, criterion, criterion_mse, args.lr_cls, args.lr_mse, args.att)
+        is_best = prec1 > best_prec1
+        best_prec1 = max(prec1, best_prec1)
+        if is_best or epoch % SAVE_FREQ == 0:
+            save_checkpoint(
+                {
+                    'epoch': epoch + 1,
+                    'arch': args.arch,
+                    'state_dict': model.state_dict(),
+                    'best_prec1': best_prec1,
+                    'optimizer_cls': optimizer_cls.state_dict(),
+                    'optimizer_gf': optimizer_gf.state_dict(),
+                },
+                is_best,
+                filename='checkpoint.pth.tar')
+
+        log(epoch, prec1, prec5, loss_cls, test_prec1, test_prec5, val_loss_cls,loss_gf, val_loss_gf, loss, val_loss, cur_lr_gf, cur_lr_cls)
+
+def log(epoch, accuracy1 ,accuracy5, loss_cls, val_accuracy1, val_accuracy5, val_loss_cls, loss_gf, val_loss_gf, loss, val_loss, cur_lr_gf, cur_lr_cls):
+    # save epoch to a file
+    f = open("gen_flow_train_lr0.01.log", "a")
+    f.write('Epoch:{0} prec@1:{accuracy1:.3f} prec@5:{accuracy5:.3f} test_prec@1:{val_accuracy1:.3f} '
+            'test_prec@5:{val_accuracy5:.3f} loss_cls:{loss_cls:.5f} val_loss_cls:{val_loss_cls:.5f} '
+            'loss_gf:{loss_gf:.5f} val_loss_gf:{val_loss_gf:.5f} loss:{loss:.5f} val_loss:{val_loss:.5f}'
+            'cur_lr_gf:{cur_lr_gf:.5f} cur_lr_cls:{cur_lr_cls:.5f}\n'
+            .format(epoch, accuracy1=accuracy1, accuracy5=accuracy5, val_accuracy1=val_accuracy1, val_accuracy5=val_accuracy5,
+                    loss_cls=loss_cls, val_loss_cls=val_loss_cls, loss_gf=loss_gf, val_loss_gf= val_loss_gf, loss=loss, val_loss=val_loss, cur_lr_cls = cur_lr_cls, cur_lr_gf = cur_lr_gf))
+
 
 
 # define the function of training for one epoch
@@ -288,6 +301,7 @@ def train(train_loader, model, criterion, criterion_mse, optimizer, optimizer_gf
                        top1=top1,
                        top5=top5,
                        lr=cur_lr_gf)))
+        return top1.avg, top5.avg, losses_cls.avg, losses_gf.avg, losses.avg
 
 
 # define the function of performing validation
@@ -370,7 +384,7 @@ def validate(val_loader, model, criterion, criterion_mse, lr_cls, lr_mse, att):
     print(('Testing Results: Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f} Loss {loss.avg:.5f}'
            .format(top1=top1, top5=top5, loss=losses)))
 
-    return top1.avg
+    return top1.avg, top5.avg, losses_cls.avg, losses_gf.avg, losses.avg
 
 
 def save_checkpoint(state, is_best, filename):
