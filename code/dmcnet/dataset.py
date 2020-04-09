@@ -179,8 +179,12 @@ class CoviarDataSet(data.Dataset):
             if idx_first == -99999:
                 idx_first = idx
             # read the corresponding pre-computed optical flow along x and y dimension
-            x_img = np.array(Image.open(os.path.join(flow_path, flow_tmpl.format('x', idx))).convert('L'))
-            y_img = np.array(Image.open(os.path.join(flow_path, flow_tmpl.format('y', idx))).convert('L'))
+            x_img = Image.open(os.path.join(flow_path, flow_tmpl.format('x', idx))).convert('L')
+            x_img = np.array(x_img.resize((340, 256)))
+
+            y_img = Image.open(os.path.join(flow_path, flow_tmpl.format('y', idx))).convert('L')
+            y_img = np.array(y_img.resize((340, 256)))
+
             flow = np.stack([x_img, y_img], axis=-1)
             if flow is None:
                 print('Error: loading flow %s failed.' % video_path)

@@ -41,7 +41,7 @@ python test.py \
 	--representation mv \
 	--test-crops 1 \
 	--test_segments 25 \
-	--data-root /home/raymond/PycharmProjects/data/mpeg4_videos_ucf101 \
+	--data-root /home/raymond/PycharmProjects/data/mpeg4_videos_ucf101/mpeg4_videos \
  	--flow-root /home/raymond/PycharmProjects/data/ucf101_optical_flow \
 	--test-list /home/raymond/PycharmProjects/dmc-net-1/datalist/ucf101_split1_test.txt \
 	--weights exp/${expdir}/_${representation}_model_best.pth.tar \

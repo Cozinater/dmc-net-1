@@ -250,7 +250,7 @@ def train(train_loader, model, criterion, criterion_mse, optimizer, optimizer_gf
         loss = loss_cls * lr_cls + loss_mse * lr_mse
 
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data[0], input_flow.size(0))
+        losses.update(loss.data, input_flow.size(0))
         losses_cls.update(loss_cls.data[0], input_flow.size(0))
         losses_gf.update(loss_mse.data[0], input_flow.size(0))
         top1.update(prec1[0], input_flow.size(0))
@@ -340,9 +340,9 @@ def validate(val_loader, model, criterion, criterion_mse, lr_cls, lr_mse, att):
         loss = loss_cls * lr_cls + loss_mse * lr_mse
 
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data[0], input_flow.size(0))
-        losses_cls.update(loss_cls.data[0], input_flow.size(0))
-        losses_gf.update(loss_mse.data[0], input_flow.size(0))
+        losses.update(loss.data, input_flow.size(0))
+        losses_cls.update(loss_cls.data, input_flow.size(0))
+        losses_gf.update(loss_mse.data, input_flow.size(0))
         top1.update(prec1[0], input_flow.size(0))
         top5.update(prec5[0], input_flow.size(0))
 
