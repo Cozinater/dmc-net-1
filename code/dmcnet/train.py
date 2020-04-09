@@ -251,10 +251,10 @@ def train(train_loader, model, criterion, criterion_mse, optimizer, optimizer_gf
 
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
         losses.update(loss.data, input_flow.size(0))
-        losses_cls.update(loss_cls.data[0], input_flow.size(0))
-        losses_gf.update(loss_mse.data[0], input_flow.size(0))
-        top1.update(prec1[0], input_flow.size(0))
-        top5.update(prec5[0], input_flow.size(0))
+        losses_cls.update(loss_cls.data, input_flow.size(0))
+        losses_gf.update(loss_mse.data, input_flow.size(0))
+        top1.update(prec1, input_flow.size(0))
+        top5.update(prec5, input_flow.size(0))
 
         # backward update
         optimizer.zero_grad()
@@ -314,27 +314,29 @@ def validate(val_loader, model, criterion, criterion_mse, lr_cls, lr_mse, att):
         input_residual = input_residual.cuda(args.gpus[0], non_blocking=True)
         input_flow = input_flow.cuda(args.gpus[0], non_blocking=True)
         input_flow = input_flow.view((-1, ) + input_mv.size()[-3:])
-        input_mv_var = torch.autograd.Variable(input_mv, volatile=True)
-        input_residual_var = torch.autograd.Variable(input_residual, volatile=True)
-        target_var = torch.autograd.Variable(target, volatile=True)
+        # input_mv_var = torch.autograd.Variable(input_mv, volatile=True)
+        # input_residual_var = torch.autograd.Variable(input_residual, volatile=True)
+        # target_var = torch.autograd.Variable(target, volatile=True)
 
         # forward
-        if att == 0:
-            output, gen_flow = model(input_mv_var, input_residual_var)
-        elif att == 1:
-            output, gen_flow, att_flow = model(input_mv_var, input_residual_var)
+        with torch.no_grad():
+            if att == 0:
+                output, gen_flow = model(input_mv, input_residual)
+            elif att == 1:
+                output, gen_flow, att_flow = model(input_mv, input_residual)
 
         # TSN classification loss
         output = output.view((-1, args.num_segments) + output.size()[1:])
         output = torch.mean(output, dim=1)
-        loss_cls = criterion(output, target_var)
+        loss_cls = criterion(output, target)
 
         # add flow reconstruction mse loss
-        input_flow_var = torch.autograd.Variable(input_flow, volatile=True)
-        if att == 0:
-            loss_mse = criterion_mse(gen_flow, input_flow_var)   # input, target
-        elif att == 1:
-            loss_mse = criterion_mse(att_flow * gen_flow, att_flow * input_flow_var)
+        #input_flow_var = torch.autograd.Variable(input_flow, volatile=True)
+        with torch.no_grad():
+            if att == 0:
+                loss_mse = criterion_mse(gen_flow, input_flow)   # input, target
+            elif att == 1:
+                loss_mse = criterion_mse(att_flow * gen_flow, att_flow * input_flow)
 
         # total loss
         loss = loss_cls * lr_cls + loss_mse * lr_mse
@@ -343,8 +345,8 @@ def validate(val_loader, model, criterion, criterion_mse, lr_cls, lr_mse, att):
         losses.update(loss.data, input_flow.size(0))
         losses_cls.update(loss_cls.data, input_flow.size(0))
         losses_gf.update(loss_mse.data, input_flow.size(0))
-        top1.update(prec1[0], input_flow.size(0))
-        top5.update(prec5[0], input_flow.size(0))
+        top1.update(prec1, input_flow.size(0))
+        top5.update(prec5, input_flow.size(0))
 
         batch_time.update(time.time() - end)
         end = time.time()

@@ -137,12 +137,13 @@ def main():
 
     # process each video to obtain its predictions
     def forward_video(input_mv, input_residual, att=0):
-        input_mv_var = torch.autograd.Variable(input_mv, volatile=True)
-        input_residual_var = torch.autograd.Variable(input_residual, volatile=True)
-        if att == 0:
-            scores, gen_flow = net(input_mv_var, input_residual_var)
-        if att == 1:
-            scores, gen_flow, att_flow = net(input_mv_var, input_residual_var)
+        # input_mv_var = torch.autograd.Variable(input_mv, volatile=True)
+        # input_residual_var = torch.autograd.Variable(input_residual, volatile=True)
+        with torch.no_grad():
+            if att == 0:
+                scores, gen_flow = net(input_mv, input_residual)
+            if att == 1:
+                scores, gen_flow, att_flow = net(input_mv, input_residual)
         scores = scores.view((-1, args.test_segments * args.test_crops) + scores.size()[1:])
         scores = torch.mean(scores, dim=1)
         if att == 0:
