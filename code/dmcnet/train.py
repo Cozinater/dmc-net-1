@@ -42,8 +42,10 @@ def main():
 
     if args.data_name == 'ucf101':
         num_class = 101
+        print("Dataset is UCF101")
     elif args.data_name == 'hmdb51':
         num_class = 51
+        print("Dataset is HMDB51")
     elif args.data_name == 'kinetics400':
         num_class = 400
     else:
@@ -223,10 +225,10 @@ def train(train_loader, model, criterion, criterion_mse, optimizer, optimizer_gf
         data_time.update(time.time() - end)
 
         # prepare input data consisting of mv input and flow input
-        target = target.cuda(args.gpus[0], async=True)
-        input_mv = input_mv.cuda(args.gpus[0], async=True)
-        input_residual = input_residual.cuda(args.gpus[0], async=True)
-        input_flow = input_flow.cuda(args.gpus[0], async=True)
+        target = target.cuda(args.gpus[0], non_blocking=True)
+        input_mv = input_mv.cuda(args.gpus[0], non_blocking=True)
+        input_residual = input_residual.cuda(args.gpus[0], non_blocking=True)
+        input_flow = input_flow.cuda(args.gpus[0], non_blocking=True)
         input_flow = input_flow.view((-1, ) + input_mv.size()[-3:])
         input_mv_var = torch.autograd.Variable(input_mv)
         input_residual_var = torch.autograd.Variable(input_residual)
@@ -307,10 +309,10 @@ def validate(val_loader, model, criterion, criterion_mse, lr_cls, lr_mse, att):
     for i, (input_flow, input_mv, input_residual, target) in enumerate(val_loader):
 
         # prepare input data consisting of mv input and flow input
-        target = target.cuda(args.gpus[0], async=True)
-        input_mv = input_mv.cuda(args.gpus[0], async=True)
-        input_residual = input_residual.cuda(args.gpus[0], async=True)
-        input_flow = input_flow.cuda(args.gpus[0], async=True)
+        target = target.cuda(args.gpus[0], non_blocking=True)
+        input_mv = input_mv.cuda(args.gpus[0], non_blocking=True)
+        input_residual = input_residual.cuda(args.gpus[0], non_blocking=True)
+        input_flow = input_flow.cuda(args.gpus[0], non_blocking=True)
         input_flow = input_flow.view((-1, ) + input_mv.size()[-3:])
         input_mv_var = torch.autograd.Variable(input_mv, volatile=True)
         input_residual_var = torch.autograd.Variable(input_residual, volatile=True)

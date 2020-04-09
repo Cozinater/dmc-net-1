@@ -154,9 +154,9 @@ def main():
 
     # iterate over the whole test set
     for i, (input_flow, input_mv, input_residual, label) in enumerate(data_loader):
-        input_mv = input_mv.cuda(args.gpus[-1], async=True)
-        input_residual = input_residual.cuda(args.gpus[0], async=True)
-        input_flow = input_flow.cuda(args.gpus[-1], async=True)
+        input_mv = input_mv.cuda(args.gpus[-1], non_blocking=True)
+        input_residual = input_residual.cuda(args.gpus[0], non_blocking=True)
+        input_flow = input_flow.cuda(args.gpus[-1], non_blocking=True)
 
         # print("input_flow shape:")
         # print(input_flow.shape) # torch.Size([batch_size, num_crops*num_segments, 2, 224, 224])
